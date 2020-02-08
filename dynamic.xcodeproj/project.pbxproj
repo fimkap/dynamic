@@ -3,11 +3,13 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 50;
+	objectVersion = 52;
 	objects = {
 
 /* Begin PBXBuildFile section */
 		2F3BAEA623ECB8EC002B00E3 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F3BAEA523ECB8EC002B00E3 /* main.swift */; };
+		2F3BAEAE23ECBDCE002B00E3 /* ScyllaKit in Frameworks */ = {isa = PBXBuildFile; productRef = 2F3BAEAD23ECBDCE002B00E3 /* ScyllaKit */; };
+		2F3BB27E23EDEB02002B00E3 /* driver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F3BB27D23EDEB02002B00E3 /* driver.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -25,6 +27,7 @@
 /* Begin PBXFileReference section */
 		2F3BAEA223ECB8EC002B00E3 /* dynamic */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = dynamic; sourceTree = BUILT_PRODUCTS_DIR; };
 		2F3BAEA523ECB8EC002B00E3 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		2F3BB27D23EDEB02002B00E3 /* driver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = driver.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -32,6 +35,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2F3BAEAE23ECBDCE002B00E3 /* ScyllaKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -58,6 +62,7 @@
 			isa = PBXGroup;
 			children = (
 				2F3BAEA523ECB8EC002B00E3 /* main.swift */,
+				2F3BB27D23EDEB02002B00E3 /* driver.swift */,
 			);
 			path = dynamic;
 			sourceTree = "<group>";
@@ -78,6 +83,9 @@
 			dependencies = (
 			);
 			name = dynamic;
+			packageProductDependencies = (
+				2F3BAEAD23ECBDCE002B00E3 /* ScyllaKit */,
+			);
 			productName = dynamic;
 			productReference = 2F3BAEA223ECB8EC002B00E3 /* dynamic */;
 			productType = "com.apple.product-type.tool";
@@ -106,6 +114,9 @@
 				Base,
 			);
 			mainGroup = 2F3BAE9923ECB8EC002B00E3;
+			packageReferences = (
+				2F3BAEAC23ECBDCE002B00E3 /* XCRemoteSwiftPackageReference "scylladb-kit" */,
+			);
 			productRefGroup = 2F3BAEA323ECB8EC002B00E3 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -121,6 +132,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2F3BAEA623ECB8EC002B00E3 /* main.swift in Sources */,
+				2F3BB27E23EDEB02002B00E3 /* driver.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -284,6 +296,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		2F3BAEAC23ECBDCE002B00E3 /* XCRemoteSwiftPackageReference "scylladb-kit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://gitlab.nexustls.com/libraries/scylladb-kit.git";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		2F3BAEAD23ECBDCE002B00E3 /* ScyllaKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2F3BAEAC23ECBDCE002B00E3 /* XCRemoteSwiftPackageReference "scylladb-kit" */;
+			productName = ScyllaKit;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 2F3BAE9A23ECB8EC002B00E3 /* Project object */;
 }

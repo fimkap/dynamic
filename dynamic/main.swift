@@ -7,6 +7,30 @@
 //
 
 import Foundation
+import ScyllaKit
 
-print("Hello, World!")
+let argc = CommandLine.argc
+if argc < 2 {
+    print("Usage: ")
+} else {
+    errno = 0
+    let filePath = CommandLine.arguments[1]
+    if freopen(filePath, "r", stdin) == nil {
+        perror(filePath)
+    } else {
+        while let line = readLine() {
+            print(line)
+        }
+    }
+}
 
+do {
+    let driver = ScyllaDriver()
+    driver.setup()
+    try driver.doQuery()
+    try driver.shutdown()
+} catch {
+    print("error: \(error)")
+}
+
+/* print("argc: \(argc) arguments: \(CommandLine.arguments)") */
