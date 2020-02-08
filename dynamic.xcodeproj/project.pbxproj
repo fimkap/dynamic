@@ -10,6 +10,7 @@
 		2F3BAEA623ECB8EC002B00E3 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F3BAEA523ECB8EC002B00E3 /* main.swift */; };
 		2F3BAEAE23ECBDCE002B00E3 /* ScyllaKit in Frameworks */ = {isa = PBXBuildFile; productRef = 2F3BAEAD23ECBDCE002B00E3 /* ScyllaKit */; };
 		2F3BB27E23EDEB02002B00E3 /* driver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F3BB27D23EDEB02002B00E3 /* driver.swift */; };
+		2F3BB2AC23EEFFDD002B00E3 /* CSVCreator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F3BB2AB23EEFFDD002B00E3 /* CSVCreator.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -28,6 +29,7 @@
 		2F3BAEA223ECB8EC002B00E3 /* dynamic */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = dynamic; sourceTree = BUILT_PRODUCTS_DIR; };
 		2F3BAEA523ECB8EC002B00E3 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		2F3BB27D23EDEB02002B00E3 /* driver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = driver.swift; sourceTree = "<group>"; };
+		2F3BB2AB23EEFFDD002B00E3 /* CSVCreator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CSVCreator.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -63,6 +65,7 @@
 			children = (
 				2F3BAEA523ECB8EC002B00E3 /* main.swift */,
 				2F3BB27D23EDEB02002B00E3 /* driver.swift */,
+				2F3BB2AB23EEFFDD002B00E3 /* CSVCreator.swift */,
 			);
 			path = dynamic;
 			sourceTree = "<group>";
@@ -132,6 +135,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2F3BAEA623ECB8EC002B00E3 /* main.swift in Sources */,
+				2F3BB2AC23EEFFDD002B00E3 /* CSVCreator.swift in Sources */,
 				2F3BB27E23EDEB02002B00E3 /* driver.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
