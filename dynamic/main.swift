@@ -26,7 +26,8 @@ if argc < 2 {
       do {
           let driver = ScyllaDriver()
           driver.setup()
-          try driver.doQuery(filePath)
+          try driver.initKeyspace()
+          try driver.dispatchQueries(filePath)
           try driver.shutdown()
       } catch {
           print("error: \(error)")
