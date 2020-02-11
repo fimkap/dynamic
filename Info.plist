@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>SCYLLA_HOSTNAME</key>
+	<string>$(SCYLLA_HOSTNAME)</string>
+	<key>SCYLLA_USERNAME</key>
+	<string>$(SCYLLA_USERNAME)</string>
+	<key>SCYLLA_PASSWORD</key>
+	<string>$(SCYLLA_PASSWORD)</string>
+</dict>
+</plist>

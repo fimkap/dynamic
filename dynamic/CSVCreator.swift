@@ -10,7 +10,7 @@ import Foundation
 
 class CSVCreator {
 
-    class func load(_ filePath: String, numberLines: Int) throws {
+    class func load(_ filePath: String, linesCount: Int) throws {
         let dir = "/Users/fimkap/dev/dynamic/" + filePath
         let fileURL = URL(fileURLWithPath: dir)
         /* if let dir = FileManager.default.urls(for: .applicationDirectory, in: .userDomainMask).first { */
@@ -28,7 +28,7 @@ class CSVCreator {
         let text = ",iPhone11,http://apple.com/iphone11,650.00,cellular,500\n"
         var records = ""
         
-        for id in 1...numberLines {
+        for id in 1...linesCount {
             /* product["product_id"] = id */
             /* text = (product.compactMap({ (key, value) -> String in */
             /*     return "\(value)" */

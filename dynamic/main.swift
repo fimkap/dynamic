@@ -7,32 +7,38 @@
 //
 
 import Foundation
-import ScyllaKit
+
+/// A `main` is the entry point of `dynamic`.
+/// It reads command line arguments and writes csv content into Scylla DB or
+///  creates csv file with a specified lines count.
+///
 
 let argc = CommandLine.argc
-if argc < 2 {
-    print("Usage: ")
-} else {
-    errno = 0
-    let filePath = CommandLine.arguments[1]
 
-    if argc == 3 {
-        // Create csv file with provided number of lines
-        let numberLines = Int(CommandLine.arguments[2]) ?? 0
-        //let csvCreator = CSVCreator()
-        try CSVCreator.load(filePath, numberLines: numberLines)
-    } else {
+if argc < 2 || argc > 3 {
+    print("Usage:\n load into Scylla DB from csv file\n dynamic <filename>\n create csv file\n dynamic <filename> <lines>")
+    exit(0)
+}
 
-      do {
-          let driver = ScyllaDriver()
-          driver.setup()
-          try driver.initKeyspace()
-          try driver.dispatchQueries(filePath)
-          try driver.shutdown()
-      } catch {
-          print("error: \(error)")
-      }
+let filePath = CommandLine.arguments[1]
+
+if argc == 2 {
+    // Create keyspace and customer table. Dispatch writes.
+    do {
+        let driver = ScyllaDriver()
+        driver.setup()
+        let firstDot = filePath.firstIndex(of: ".") ?? filePath.endIndex
+        let tableName = String(filePath[..<firstDot])
+        try driver.initKeyspace(tableName)
+        try driver.dispatchQueries(filePath, tableName)
+        try driver.shutdown()
+    } catch {
+        print("error: \(error)")
     }
 }
 
-/* print("argc: \(argc) arguments: \(CommandLine.arguments)") */
+if argc == 3 {
+    // Create csv file with the given lines count
+    let linesCount = Int(CommandLine.arguments[2]) ?? 0
+    try CSVCreator.load(filePath, linesCount: linesCount)
+}

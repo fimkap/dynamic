@@ -1,0 +1,14 @@
+//
+//  Debug.xcconfig
+//  dynamic
+//
+//  Created by Efim Polevoi on 10/02/2020.
+//  Copyright © 2020 Efim Polevoi. All rights reserved.
+//
+
+// Configuration settings file format documentation can be found at:
+// https://help.apple.com/xcode/#/dev745c5c974
+
+SCYLLA_HOSTNAME = 127.0.0.1
+SCYLLA_USERNAME = cassandra
+SCYLLA_PASSWORD = cassandra

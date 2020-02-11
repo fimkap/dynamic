@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2F1127A323F1BDAE00A31558 /* Configuration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F1127A223F1BDAE00A31558 /* Configuration.swift */; };
 		2F3BAEA623ECB8EC002B00E3 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F3BAEA523ECB8EC002B00E3 /* main.swift */; };
 		2F3BAEAE23ECBDCE002B00E3 /* ScyllaKit in Frameworks */ = {isa = PBXBuildFile; productRef = 2F3BAEAD23ECBDCE002B00E3 /* ScyllaKit */; };
 		2F3BB27E23EDEB02002B00E3 /* driver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F3BB27D23EDEB02002B00E3 /* driver.swift */; };
@@ -26,6 +27,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		2F11279F23F1B7EB00A31558 /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
+		2F1127A023F1BC4300A31558 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		2F1127A223F1BDAE00A31558 /* Configuration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Configuration.swift; sourceTree = "<group>"; };
 		2F3BAEA223ECB8EC002B00E3 /* dynamic */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = dynamic; sourceTree = BUILT_PRODUCTS_DIR; };
 		2F3BAEA523ECB8EC002B00E3 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		2F3BB27D23EDEB02002B00E3 /* driver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = driver.swift; sourceTree = "<group>"; };
@@ -44,9 +48,20 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		2F1127A123F1BD9600A31558 /* Configuration */ = {
+			isa = PBXGroup;
+			children = (
+				2F1127A223F1BDAE00A31558 /* Configuration.swift */,
+			);
+			path = Configuration;
+			sourceTree = "<group>";
+		};
 		2F3BAE9923ECB8EC002B00E3 = {
 			isa = PBXGroup;
 			children = (
+				2F1127A123F1BD9600A31558 /* Configuration */,
+				2F1127A023F1BC4300A31558 /* Info.plist */,
+				2F11279F23F1B7EB00A31558 /* Debug.xcconfig */,
 				2F3BAEA423ECB8EC002B00E3 /* dynamic */,
 				2F3BAEA323ECB8EC002B00E3 /* Products */,
 			);
@@ -136,6 +151,7 @@
 			files = (
 				2F3BAEA623ECB8EC002B00E3 /* main.swift in Sources */,
 				2F3BB2AC23EEFFDD002B00E3 /* CSVCreator.swift in Sources */,
+				2F1127A323F1BDAE00A31558 /* Configuration.swift in Sources */,
 				2F3BB27E23EDEB02002B00E3 /* driver.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -145,6 +161,7 @@
 /* Begin XCBuildConfiguration section */
 		2F3BAEA723ECB8EC002B00E3 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 2F11279F23F1B7EB00A31558 /* Debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -205,6 +222,7 @@
 		};
 		2F3BAEA823ECB8EC002B00E3 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 2F11279F23F1B7EB00A31558 /* Debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -258,6 +276,7 @@
 		};
 		2F3BAEAA23ECB8EC002B00E3 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 2F11279F23F1B7EB00A31558 /* Debug.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 728LCMUKP2;
@@ -269,6 +288,7 @@
 		};
 		2F3BAEAB23ECB8EC002B00E3 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 2F11279F23F1B7EB00A31558 /* Debug.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 728LCMUKP2;
