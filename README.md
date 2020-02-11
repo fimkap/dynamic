@@ -13,10 +13,11 @@ On Mac /private/var/ or /var is not allowed for mount to Docker by default. You 
 sudo mkdir -p /var/lib/scylla/data /var/lib/scylla/commitlog /var/lib/scylla/hints /var/lib/scylla/view_hints
 docker run --name dy-scylla -p 9042:9042 --volume /private/var/lib/scylla:/var/lib/scylla -d scylladb/scylla
 ```
-Open cqlsh:
+Wait a bit until Scylla is ready. Open cqlsh:
 ```
 docker exec -it dy-scylla cqlsh
 ```
+If it gives error, wait a bit more and try again.
 
 Clone dynamic repo:
 ```
