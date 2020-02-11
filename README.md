@@ -46,6 +46,7 @@ Run the following command to load the data into Scylla container and index it:
 time ./DerivedData/dynamic/Build/Products/Debug/dynamic 232.csv
 ```
 It can take around 6 mins for 1M lines.
+Ignore the message from ScyllaKit "Schema change is not yet implemented".
 Check with cqlsh:
 ```
 desc keyspaces;

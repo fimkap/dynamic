@@ -12,7 +12,8 @@ import ScyllaKit
 let SCYLLA_HOSTNAME = "127.0.0.1"
 let SCYLLA_USERNAME = "cassandra"
 let SCYLLA_PASSWORD = "cassandra"
-let MAX_CONCURRENT_OPERATION_COUNT = 32
+let MAX_CONCURRENT_OPERATION_COUNT = 64
+let MAX_SCYLLA_CONNECTION_COUNT = 10
 
 /// A `ScyllaDriver` is the central type in `dynamic`.
 /// Its central function is to dispatch write queries to Scylla DB based on csv file
@@ -72,8 +73,16 @@ class ScyllaDriver {
     ///
     func dispatchQueries(_ filePath: String, _ tableName: String) throws {
         let db = ScyllaConnectionSource(configuration: .init(hostname: SCYLLA_HOSTNAME, username: SCYLLA_USERNAME, password: SCYLLA_PASSWORD))
-        let conn = try db.makeConnection(logger: Logger(label: "sds"), on: self.eventLoop).wait()
+        // Simplistic implementation of a connection pool.
+        // It should enable us to improve load on Scylla for better performance.
+        // ScyllaKit package has some nice patterns for a built-in connection pool,
+        //  but it doesn't compile at the moment.
+        var pool: [ScyllaConnection] = []
+        for _ in 0...MAX_SCYLLA_CONNECTION_COUNT {
+            pool.append(try db.makeConnection(logger: Logger(label: "sds"), on: self.eventLoop).wait())
+        }
 
+        // We'll use OperationQueue to dispatch queries from multiple threads to improve performance.
         let queue = OperationQueue()
         queue.maxConcurrentOperationCount = MAX_CONCURRENT_OPERATION_COUNT
 
@@ -86,19 +95,22 @@ class ScyllaDriver {
         // Parse csv file line by line not to load the whole file into memory
         while let line = readLine() {
             queue.addOperation {
-            
+                // Separate components and discard leading/trailing whitespaces
                 let product: [String] = line.components(separatedBy: ",").map({ (col) -> String in return col.trimmingCharacters(in: .whitespaces)})
                 
+                // Build the query
                 let query = "INSERT INTO dynamic.c\(tableName) (product_id, product_name, product_image_url, product_price, product_categories, product_stock) VALUES (\(Int(product[0]) ?? 0), '\(product[1])', '\(product[2])', \(Float(product[3]) ?? 0.0), '\(product[4])', \(Int(product[5]) ?? 0));"
-                
+                // Randomize the connection selection from the pool and run the query synchronously
                 do {
-                    _ = try conn.query(query, flags: QueryFlags.none, consistency: Consistency.any).wait()
+                    _ = try pool[Int.random(in: 0 ..< MAX_SCYLLA_CONNECTION_COUNT)].query(query, flags: QueryFlags.none, consistency: Consistency.any).wait()
                 } catch {
                     print("error: \(error)")
                 }
             }
         }
         queue.waitUntilAllOperationsAreFinished()
-        _ = conn.close()
+        for i in 0...MAX_SCYLLA_CONNECTION_COUNT {
+            _ = pool[i].close()
+        }
     }
 }
