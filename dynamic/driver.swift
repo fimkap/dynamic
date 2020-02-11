@@ -80,10 +80,14 @@ class ScyllaDriver {
         if freopen(filePath, "r", stdin) == nil {
             perror(filePath)
         }
+        // Skip csv header
+        _ = readLine()
+        
+        // Parse csv file line by line not to load the whole file into memory
         while let line = readLine() {
             queue.addOperation {
             
-                let product: [String] = line.components(separatedBy: ",")
+                let product: [String] = line.components(separatedBy: ",").map({ (col) -> String in return col.trimmingCharacters(in: .whitespaces)})
                 
                 let query = "INSERT INTO dynamic.c\(tableName) (product_id, product_name, product_image_url, product_price, product_categories, product_stock) VALUES (\(Int(product[0]) ?? 0), '\(product[1])', '\(product[2])', \(Float(product[3]) ?? 0.0), '\(product[4])', \(Int(product[5]) ?? 0));"
                 

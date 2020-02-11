@@ -8,31 +8,18 @@
 
 import Foundation
 
+/// A `CSVCreator` is the way to create a test csv file for `dynamic`.
+/// It gets a file name and lines count and creates a csv file in the current dir
+///
 class CSVCreator {
 
     class func load(_ filePath: String, linesCount: Int) throws {
-        let dir = "/Users/fimkap/dev/dynamic/" + filePath
-        let fileURL = URL(fileURLWithPath: dir)
-        /* if let dir = FileManager.default.urls(for: .applicationDirectory, in: .userDomainMask).first { */
-        //let fileURL = dir.appendingPathComponent(filePath)
-        /* var text = "32,iPhone" */
-        
-        /* var product = [ */
-        /*     "product_id": 1, */
-        /*     "product_name": "iPhone11", */
-        /*     "product_image_url": "http://apple.com/iphone11", */
-        /*     "product_price": 650.0, */
-        /*     "product_categories": "cellular", */
-        /*     "product_stock": 400] as [String : Any] */
-
+        let fileURL = URL(fileURLWithPath: "./" + filePath)
         let text = ",iPhone11,http://apple.com/iphone11,650.00,cellular,500\n"
-        var records = ""
-        
+        var records = "product_id, product_name, product_image_url,  product_price, product_categories, product_stock \n"
+   
+        // Increment index for each row
         for id in 1...linesCount {
-            /* product["product_id"] = id */
-            /* text = (product.compactMap({ (key, value) -> String in */
-            /*     return "\(value)" */
-            /* }) as Array).joined(separator: ",") */
             records += String(id) + text
         }
         do {
@@ -41,8 +28,5 @@ class CSVCreator {
         catch {
             print("error: \(error)")
         }
-
-        
-        //}
     }
 }
