@@ -27,6 +27,11 @@ class ScyllaDriver {
     private var eventLoop: EventLoop {
         return self.group.next()
     }
+    private let tableName: String
+    
+    init(tableName: String) {
+        self.tableName = tableName
+    }
 
     func setup() {
         self.group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
@@ -39,10 +44,7 @@ class ScyllaDriver {
 
     /// Create a keyspace and a customer table
     ///
-    /// - parameters:
-    ///    - tableName: The name for a customer table.
-    ///
-    func initKeyspace(_ tableName: String) throws {
+    func initKeyspace() throws {
         let db = ScyllaConnectionSource(configuration: .init(hostname: SCYLLA_HOSTNAME, username: SCYLLA_USERNAME, password: SCYLLA_PASSWORD))
         let conn = try db.makeConnection(logger: Logger(label: "sds"), on: self.eventLoop).wait()
         _ = try conn.query("""
@@ -53,7 +55,7 @@ class ScyllaDriver {
                     };
                 """).wait()
         _ = try conn.query("""
-                CREATE TABLE IF NOT EXISTS dynamic.c\(tableName) (
+                CREATE TABLE IF NOT EXISTS dynamic.c\(self.tableName) (
                     product_id int PRIMARY KEY,
                     product_name text,
                     product_image_url text,
@@ -71,7 +73,7 @@ class ScyllaDriver {
     ///    - filePath: The path (name) for csv file.
     ///    - tableName: The name for a customer table.
     ///
-    func dispatchQueries(_ filePath: String, _ tableName: String) throws {
+    func dispatchQueries(_ filePath: String) throws {
         let db = ScyllaConnectionSource(configuration: .init(hostname: SCYLLA_HOSTNAME, username: SCYLLA_USERNAME, password: SCYLLA_PASSWORD))
         // Simplistic implementation of a connection pool.
         // It should enable us to improve load on Scylla for better performance.
@@ -98,7 +100,7 @@ class ScyllaDriver {
                 // Note that the library is not mature enough to support batch queries.
                 // Randomize the connection selection from the pool and run the query synchronously
                 do {
-                    let query = try CSVParser.parseLine(tableName, line)
+                    let query = try CSVParser.parseLine(self.tableName, line)
                     _ = try pool[Int.random(in: 0 ..< MAX_SCYLLA_CONNECTION_COUNT)].query(query, flags: QueryFlags.none, consistency: Consistency.any).wait()
                 } catch {
                     // We need to print the error here because the operation queue doesn't propagate the error to the main thread.

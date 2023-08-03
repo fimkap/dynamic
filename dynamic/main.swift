@@ -24,14 +24,21 @@ if argc < 2 || argc > 3 {
 let filePath = CommandLine.arguments[1]
 
 if argc == 2 {
+    // Check if the file exists at the specified filePath
+    let fileManager = FileManager.default
+    guard fileManager.fileExists(atPath: filePath) else {
+        print("File not found at the specified path.")
+        exit(0)
+    }
+    // We derive a table name from the file name
+    let tableName = String(filePath.prefix(upTo: filePath.firstIndex(of: ".") ?? filePath.endIndex))
+    
     // Create keyspace and customer table. Dispatch writes.
     do {
-        let driver = ScyllaDriver()
+        let driver = ScyllaDriver(tableName: tableName)
         driver.setup()
-        let firstDot = filePath.firstIndex(of: ".") ?? filePath.endIndex
-        let tableName = String(filePath[..<firstDot])
-        try driver.initKeyspace(tableName)
-        try driver.dispatchQueries(filePath, tableName)
+        try driver.initKeyspace()
+        try driver.dispatchQueries(filePath)
         try driver.shutdown()
     } catch {
         print("error: \(error)")
