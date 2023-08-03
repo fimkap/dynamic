@@ -19,14 +19,11 @@ class CSVCreator {
         var records = "product_id, product_name, product_image_url,  product_price, product_categories, product_stock \n"
    
         // Increment index for each row
+        // Note: better to use batch insert not lo load all data in memory
+        // not implemented in this exercise (it is a helper for testing)
         for id in 1...linesCount {
             records += String(id) + text
         }
-        do {
-            try records.write(to: fileURL, atomically: false, encoding: .utf8)
-        }
-        catch {
-            print("error: \(error)")
-        }
+        try records.write(to: fileURL, atomically: false, encoding: .utf8)
     }
 }

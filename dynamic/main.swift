@@ -13,6 +13,7 @@ import Foundation
 ///  creates csv file with a specified lines count.
 ///
 
+let MAX_LINES = 1_000_000
 let argc = CommandLine.argc
 
 if argc < 2 || argc > 3 {
@@ -39,6 +40,20 @@ if argc == 2 {
 
 if argc == 3 {
     // Create csv file with the given lines count
-    let linesCount = Int(CommandLine.arguments[2]) ?? 0
-    try CSVCreator.load(filePath, linesCount: linesCount)
+    do {
+        // Parse the command-line argument into an integer
+        if let linesCount = Int(CommandLine.arguments[2]) {
+            // Check for valid lines count
+            guard linesCount > 0 && linesCount <= MAX_LINES else {
+                print("error: Invalid lines count. It should be between 1 and 1,000,000.")
+                exit(0)
+            }
+            // If the lines count is valid, load the CSVCreator
+            try CSVCreator.load(filePath, linesCount: linesCount)
+        } else {
+            print("error: Invalid lines count. Please provide a valid integer value.")
+        }
+    } catch {
+        print("error: \(error)")
+    }
 }

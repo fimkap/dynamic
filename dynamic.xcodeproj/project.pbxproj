@@ -12,6 +12,7 @@
 		2F3BAEAE23ECBDCE002B00E3 /* ScyllaKit in Frameworks */ = {isa = PBXBuildFile; productRef = 2F3BAEAD23ECBDCE002B00E3 /* ScyllaKit */; };
 		2F3BB27E23EDEB02002B00E3 /* driver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F3BB27D23EDEB02002B00E3 /* driver.swift */; };
 		2F3BB2AC23EEFFDD002B00E3 /* CSVCreator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F3BB2AB23EEFFDD002B00E3 /* CSVCreator.swift */; };
+		2F5020812A7BB4B200DD73B7 /* CSVParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F5020802A7BB4B200DD73B7 /* CSVParser.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -34,6 +35,7 @@
 		2F3BAEA523ECB8EC002B00E3 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		2F3BB27D23EDEB02002B00E3 /* driver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = driver.swift; sourceTree = "<group>"; };
 		2F3BB2AB23EEFFDD002B00E3 /* CSVCreator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CSVCreator.swift; sourceTree = "<group>"; };
+		2F5020802A7BB4B200DD73B7 /* CSVParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CSVParser.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -81,6 +83,7 @@
 				2F3BAEA523ECB8EC002B00E3 /* main.swift */,
 				2F3BB27D23EDEB02002B00E3 /* driver.swift */,
 				2F3BB2AB23EEFFDD002B00E3 /* CSVCreator.swift */,
+				2F5020802A7BB4B200DD73B7 /* CSVParser.swift */,
 			);
 			path = dynamic;
 			sourceTree = "<group>";
@@ -149,6 +152,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2F5020812A7BB4B200DD73B7 /* CSVParser.swift in Sources */,
 				2F3BAEA623ECB8EC002B00E3 /* main.swift in Sources */,
 				2F3BB2AC23EEFFDD002B00E3 /* CSVCreator.swift in Sources */,
 				2F1127A323F1BDAE00A31558 /* Configuration.swift in Sources */,
@@ -278,8 +282,9 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 2F11279F23F1B7EB00A31558 /* Debug.xcconfig */;
 			buildSettings = {
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 728LCMUKP2;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -290,8 +295,9 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 2F11279F23F1B7EB00A31558 /* Debug.xcconfig */;
 			buildSettings = {
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 728LCMUKP2;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;

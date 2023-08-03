@@ -95,15 +95,13 @@ class ScyllaDriver {
         // Parse csv file line by line not to load the whole file into memory
         while let line = readLine() {
             queue.addOperation {
-                // Separate components and discard leading/trailing whitespaces
-                let product: [String] = line.components(separatedBy: ",").map({ (col) -> String in return col.trimmingCharacters(in: .whitespaces)})
-                
-                // Build the query
-                let query = "INSERT INTO dynamic.c\(tableName) (product_id, product_name, product_image_url, product_price, product_categories, product_stock) VALUES (\(Int(product[0]) ?? 0), '\(product[1])', '\(product[2])', \(Float(product[3]) ?? 0.0), '\(product[4])', \(Int(product[5]) ?? 0));"
+                // Note that the library is not mature enough to support batch queries.
                 // Randomize the connection selection from the pool and run the query synchronously
                 do {
+                    let query = try CSVParser.parseLine(tableName, line)
                     _ = try pool[Int.random(in: 0 ..< MAX_SCYLLA_CONNECTION_COUNT)].query(query, flags: QueryFlags.none, consistency: Consistency.any).wait()
                 } catch {
+                    // We need to print the error here because the operation queue doesn't propagate the error to the main thread.
                     print("error: \(error)")
                 }
             }
