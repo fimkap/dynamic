@@ -71,7 +71,6 @@ class ScyllaDriver {
     ///
     /// - parameters:
     ///    - filePath: The path (name) for csv file.
-    ///    - tableName: The name for a customer table.
     ///
     func dispatchQueries(_ filePath: String) throws {
         let db = ScyllaConnectionSource(configuration: .init(hostname: SCYLLA_HOSTNAME, username: SCYLLA_USERNAME, password: SCYLLA_PASSWORD))
