@@ -37,11 +37,11 @@ class CSVParser {
         }
         
         // Validate and parse individual fields
-        let productName = product[1]
-        let productImageUrl = product[2]
-        let productCategories = product[4]
         guard let productId = Int(product[0]),
+              let productName = product[1].isEmpty ? nil : product[1],
+              let productImageUrl = product[2].isEmpty ? nil : product[2],
               let productPrice = Float(product[3]),
+              let productCategories = product[4].isEmpty ? nil : product[4],
               let productStock = Int(product[5]) else {
             throw CSVLineError.missingField(index: product.firstIndex(where: { $0.isEmpty }) ?? 0)
         }

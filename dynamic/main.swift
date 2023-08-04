@@ -56,7 +56,7 @@ if argc == 3 {
                 exit(0)
             }
             // If the lines count is valid, load the CSVCreator
-            try CSVCreator.load(filePath, linesCount: linesCount)
+            try CSVCreator.load(filePath, totalLines: linesCount)
         } else {
             print("error: Invalid lines count. Please provide a valid integer value.")
         }
