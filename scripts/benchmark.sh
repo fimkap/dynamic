@@ -1,23 +1,27 @@
 #!/usr/bin/env bash
-# Load a csv file into ScyllaDB several times and print each run's summary and the rows stored.
-# Drops the keyspace `dynamic` before every run, so each one starts from an empty table.
+# Measure the loader against a running ScyllaDB, in about a minute.
 #
-#   scripts/benchmark.sh 232.csv 3 --in-flight 512
+# Loads 250,000 rows, then 1,000,000, each into an empty keyspace (the keyspace `dynamic` is
+# dropped first), and checks how many rows were stored. The loader reports its own time,
+# throughput and peak memory. Two sizes, because peak memory that stays the same between
+# them shows that memory doesn't grow with the file.
 #
-# Needs a release build (swift build -c release) and ScyllaDB running in the Docker container
-# named by SCYLLA_CONTAINER (default: dy-scylla).
+#   scripts/benchmark.sh
+#   scripts/benchmark.sh --in-flight 4096
+#
+# Needs ScyllaDB in the Docker container named by SCYLLA_CONTAINER (default: dy-scylla).
+# The test files are generated on first use, in this directory's parent.
 set -euo pipefail
-
-file=${1:?usage: scripts/benchmark.sh <file.csv> [runs] [loader options...]}
-runs=${2:-3}
-shift $(( $# < 2 ? $# : 2 ))
+cd "$(dirname "$0")/.."
 container=${SCYLLA_CONTAINER:-dy-scylla}
-table="c$(basename "${file%.*}")"
-loader="$(dirname "$0")/../.build/release/dynamic"
+loader=.build/release/dynamic
 
-for run in $(seq "$runs"); do
+swift build -c release -q
+for rows in 250000 1000000; do
+    file="$rows.csv"
+    [[ -f $file ]] || "$loader" "$file" "$rows"
     docker exec "$container" cqlsh -e "DROP KEYSPACE IF EXISTS dynamic"
-    summary=$("$loader" "$@" "$file" | grep '^Wrote' || true)
-    stored=$(docker exec "$container" cqlsh --request-timeout=600 -e "SELECT COUNT(*) FROM dynamic.$table" | sed -n 4p | tr -d ' ')
-    echo "run $run: $summary Stored: $stored rows."
+    "$loader" "$@" "$file" || true
+    stored=$(docker exec "$container" cqlsh --request-timeout=300 -e "SELECT COUNT(*) FROM dynamic.c$rows" | sed -n 4p | tr -d ' ')
+    echo "  rows stored: $stored"
 done
