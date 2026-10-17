@@ -97,6 +97,11 @@ class ScyllaDriver {
             pool.append(try self.makeConnection())
         }
 
+        // Prepare the insert on every connection, so Scylla parses it once per connection
+        // rather than once per row
+        let insert = Product.insertQuery(into: self.table)
+        let statements = try pool.map { try PreparedStatement.prepare(insert, on: $0).wait() }
+
         // We'll use OperationQueue to dispatch queries from multiple threads to improve performance.
         let queue = OperationQueue()
         queue.maxConcurrentOperationCount = MAX_CONCURRENT_OPERATION_COUNT
@@ -115,12 +120,12 @@ class ScyllaDriver {
                 print("error: line \(reader.recordLine): \(error)")
                 continue
             }
-            let query = product.insertStatement(into: self.table)
             queue.addOperation {
                 // Note that the library is not mature enough to support batch queries.
                 // Randomize the connection selection from the pool and run the query synchronously
                 do {
-                    _ = try pool[Int.random(in: 0 ..< MAX_SCYLLA_CONNECTION_COUNT)].query(query, flags: QueryFlags.none, consistency: Consistency.any).wait()
+                    let index = Int.random(in: 0 ..< MAX_SCYLLA_CONNECTION_COUNT)
+                    try statements[index].execute(product.values, consistency: .any, on: pool[index]).wait()
                 } catch {
                     // We need to print the error here because the operation queue doesn't propagate the error to the main thread.
                     print("error: \(error)")

@@ -43,10 +43,17 @@ final class ProductTests: XCTestCase {
         XCTAssertThrowsError(try Product.validateHeader(Array(Product.columns.reversed())))
     }
 
-    func testInsertStatementEscapesQuotes() throws {
+    func testInsertQueryHasAMarkerPerColumn() {
+        XCTAssertEqual(
+            Product.insertQuery(into: "dynamic.c1"),
+            "INSERT INTO dynamic.c1 (product_id, product_name, product_image_url, product_price, product_categories, product_stock) VALUES (?, ?, ?, ?, ?, ?)")
+    }
+
+    func testValuesFollowColumns() throws {
         var fields = valid
         fields[1] = "Children's iPad case"
-        let statement = try Product(fields: fields).insertStatement(into: "dynamic.c1")
-        XCTAssertTrue(statement.contains("'Children''s iPad case'"), statement)
+        XCTAssertEqual(
+            try Product(fields: fields).values,
+            [.int(123), .text("Children's iPad case"), .text("http://apple.com/iphone11"), .float(650), .text("cellular"), .int(500)])
     }
 }

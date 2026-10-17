@@ -77,21 +77,18 @@ struct Product {
         stock = try parsed(5) { Int32($0) }
     }
 
-    /// Build a query to insert the product.
-    /// Text values are quoted for CQL, where a quote inside a string is written twice.
+    /// Build the query to insert a product, with a `?` for each column's value
     ///
     /// - parameters:
     ///    - table: The table, qualified with its keyspace.
-    /// - returns: An INSERT statement.
     ///
-    func insertStatement(into table: String) -> String {
-        func text(_ value: String) -> String {
-            return "'" + value.replacingOccurrences(of: "'", with: "''") + "'"
-        }
-        return """
-            INSERT INTO \(table)
-            (product_id, product_name, product_image_url, product_price, product_categories, product_stock)
-            VALUES (\(id), \(text(name)), \(text(imageURL)), \(price), \(text(categories)), \(stock));
-            """
+    static func insertQuery(into table: String) -> String {
+        let markers = Array(repeating: "?", count: columns.count).joined(separator: ", ")
+        return "INSERT INTO \(table) (\(columns.joined(separator: ", "))) VALUES (\(markers))"
+    }
+
+    /// The product's values, in the order of `columns`
+    var values: [CQLValue] {
+        return [.int(id), .text(name), .text(imageURL), .float(price), .text(categories), .int(stock)]
     }
 }

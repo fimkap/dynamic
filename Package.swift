@@ -10,6 +10,7 @@ let package = Package(
         .package(url: "https://gitlab.nexustls.com/libraries/nio-scylladb.git",
                  revision: "2253402f0ff803d7966eddde6ec97105f3cfa1d0"),
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.0.0"),
+        .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
     ],
     targets: [
         .executableTarget(
@@ -17,11 +18,15 @@ let package = Package(
             dependencies: [
                 .product(name: "NIOScyllaDB", package: "nio-scylladb"),
                 .product(name: "NIO", package: "swift-nio"),
+                .product(name: "Logging", package: "swift-log"),
             ]
         ),
         .testTarget(
             name: "dynamicTests",
-            dependencies: ["dynamic"]
+            dependencies: [
+                "dynamic",
+                .product(name: "NIOScyllaDB", package: "nio-scylladb"),
+            ]
         ),
     ]
 )
