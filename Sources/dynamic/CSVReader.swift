@@ -66,7 +66,14 @@ final class CSVReader {
             throw CSVError.cannotOpen(path: path)
         }
         self.readChunk = {
+            #if canImport(ObjectiveC)
+            // Foundation returns each chunk as an autoreleased object, and the main thread of a
+            // command-line program never drains its autorelease pool, so each read gets a pool of
+            // its own. Without one, every chunk stayed in memory until the program exited.
+            return try autoreleasepool { [UInt8](try file.read(upToCount: chunkSize) ?? Data()) }
+            #else
             return [UInt8](try file.read(upToCount: chunkSize) ?? Data())
+            #endif
         }
     }
 
