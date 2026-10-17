@@ -2,7 +2,7 @@
 
 Loads a large product CSV file into ScyllaDB from Swift: a million rows, read as a stream and written asynchronously with backpressure, in constant memory.
 
-It began in February 2020 as a take-home assignment for a job interview. In October 2026 I came back to it: I answered the questions from the original code review, ran it against a current ScyllaDB, and measured each change. Each change is its own commit, with its reasons and measurements in the message.
+It began in February 2020 as a take-home assignment for a job interview, where the hard part was getting Swift to talk to ScyllaDB at all: there was no official driver. In October 2026 I came back to it: I answered the questions from the original code review, ran it against a current ScyllaDB, and measured each change. Each change is its own commit, with its reasons and measurements in the message.
 
 ## Quick start
 
@@ -34,19 +34,22 @@ product_id, product_name, product_image_url, product_price, product_categories, 
 123, iPhone11, http://apple.com/iphone11, 650.00, cellular, 500
 ```
 
-My 2020 solution used an unofficial Swift driver and wrote rows from 64 threads, each blocking on one query at a time. An asynchronous version saw some of its writes fail, so I shipped the blocking one. The code review asked:
+**The driver was the real challenge.** Swift had no official driver for Cassandra or ScyllaDB. The team that set the task saw Swift as promising for the job but hadn't managed to find and set up a driver that worked, so that was the heart of the task. I tried several. ScyllaKit, built on SwiftNIO for the Vapor web framework, looked the most promising but didn't integrate with Vapor well. So I dropped the framework, which was overhead for a batch job anyway, and got its driver connecting and writing to ScyllaDB from a plain command-line program. Its connection pool didn't compile, so I wrote a simple one.
 
-1. The CSV parsing ignores the spec, such as quoted fields. How would you handle it?
-2. Each query is built as text. Does the library support bound statements?
-3. How would you write collections, tuples or user-defined types?
-4. How do you provide backpressure? Are the calls blocking?
-5. Every row goes into an operation queue up front. Won't a large file run out of memory?
+From there, one thread loaded a million rows in 30 minutes, and 64 threads, each blocking on one query at a time, in 6. An asynchronous version was much faster but saw some of its writes fail, so I shipped the blocking one.
+
+The review was positive about the SwiftNIO approach, which the reviewer hadn't come across before. It also asked how I'd take the solution further:
+
+1. Parsing the full CSV spec, such as quoted fields. Simple parsing was fine for this task.
+2. Bound statements instead of query text, if the library supported them.
+3. Collections, tuples and user-defined types.
+4. Backpressure, and whether the calls block.
 
 ## What I found coming back to it
 
 **Current ScyllaDB rejected the 2020 schema, and the program hung instead of saying so.** ScyllaDB now distributes a keyspace's data with tablets, which don't support `SimpleStrategy`. The driver swallowed the error and waited forever. The keyspace now uses `NetworkTopologyStrategy`.
 
-**The driver's request layer was broken in five ways.** [nio-scylladb](https://gitlab.nexustls.com/libraries/nio-scylladb), a port of Vapor's PostgreSQL driver to CQL:
+**The driver that made the 2020 solution possible was broken in five ways.** [nio-scylladb](https://gitlab.nexustls.com/libraries/nio-scylladb), the SwiftNIO driver under ScyllaKit, is a port of Vapor's PostgreSQL driver to CQL. Its request layer:
 
 1. never completes a request that ScyllaDB answered with an error, so the request waits forever;
 2. reuses request ids under load, matching replies to the wrong requests, and eventually crashes;
@@ -58,7 +61,7 @@ It has no license, so I didn't fork it. The loader keeps only its message type a
 
 **Measuring found one more leak, in my own code.** On macOS, the CSV reader's 64 KB chunks were autoreleased objects, and the main thread of a command-line program never drains its autorelease pool, so the loader held the whole file in memory. A heap snapshot showed 639 live chunks. Each read now drains its own pool.
 
-**The 2020 "6 minutes" was mostly the environment.** The same blocking code loads a million rows in 37 s today.
+**The 2020 "6 minutes" was a per-request cost, multiplied.** One blocking thread took 30 minutes, about 1.8 ms per request; 64 threads took 6 minutes, five times faster rather than sixty-four, so something capped the rate near 2,800 requests a second. Each blocking write went out as its own packet and system call and woke a thread on its reply, in a debug build, through Docker for Mac's userspace network stack. Writing asynchronously packs many requests into each packet and system call, which is why it was dramatically faster then. Today those per-request costs are about ten times smaller: the 2020 code takes 37 s, and asynchronous writes gain twofold rather than an order of magnitude.
 
 ## How it works
 
