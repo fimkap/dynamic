@@ -42,11 +42,22 @@ final class Tally {
         }
     }
 
-    /// The counts, then the first rows that failed, if any
-    var summary: String {
+    /// Whether every row was written
+    var isComplete: Bool {
+        return locked { failedCount == 0 && skippedCount == 0 }
+    }
+
+    /// The counts, the time taken and the peak memory, then the first rows that failed, if any
+    ///
+    /// - parameters:
+    ///    - seconds: How long reading and writing took.
+    ///
+    func summary(seconds: Double) -> String {
         return locked {
-            var text = "Wrote \(writtenCount) rows; retried \(retriedCount) writes; "
-                + "\(failedCount) rows failed; \(skippedCount) skipped as invalid."
+            let rate = seconds > 0 ? Int(Double(writtenCount) / seconds) : 0
+            var text = "Wrote \(writtenCount) rows in \(String(format: "%.1f", seconds)) s (\(rate) rows/s). "
+                + "Retries: \(retriedCount). Failed rows: \(failedCount). Skipped as invalid: \(skippedCount). "
+                + "Peak memory: \(peakMemory() / 1_048_576) MB."
             for failure in failures {
                 text += "\n  product_id \(failure.id): \(failure.error)"
             }
@@ -65,4 +76,24 @@ final class Tally {
         defer { lock.unlock() }
         return body()
     }
+}
+
+/// The process's peak memory use, in bytes.
+/// On macOS that's the peak memory footprint, which counts memory the system has compressed.
+/// The resident size doesn't, so under memory pressure it can understate use several times over.
+///
+func peakMemory() -> Int {
+    #if canImport(Darwin)
+    var info = rusage_info_v4()
+    let result = withUnsafeMutablePointer(to: &info) { pointer in
+        pointer.withMemoryRebound(to: rusage_info_t?.self, capacity: 1) {
+            proc_pid_rusage(getpid(), RUSAGE_INFO_V4, $0)
+        }
+    }
+    return result == 0 ? Int(info.ri_lifetime_max_phys_footprint) : 0
+    #else
+    var usage = rusage()
+    getrusage(RUSAGE_SELF, &usage)
+    return usage.ru_maxrss * 1024  // Linux reports kilobytes
+    #endif
 }
