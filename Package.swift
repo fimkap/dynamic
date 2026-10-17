@@ -19,5 +19,9 @@ let package = Package(
                 .product(name: "NIO", package: "swift-nio"),
             ]
         ),
+        .testTarget(
+            name: "dynamicTests",
+            dependencies: ["dynamic"]
+        ),
     ]
 )

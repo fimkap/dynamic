@@ -11,13 +11,25 @@ import Foundation
 let BATCH_SIZE = 1000
 
 /// A `CSVCreator` is the way to create a test csv file for `dynamic`.
-/// It gets a file name and lines count and creates a csv file in the current dir
+/// It gets a file path and lines count and creates a csv file.
+/// Some product names hold commas, quotes and apostrophes, so loading the file
+/// exercises CSV quoting and the escaping of values in queries.
 ///
 class CSVCreator {
     
     enum CSVCreatorError: Error {
         case fileOpenFailed
     }
+
+    /// The products the file cycles through
+    static let samples: [(name: String, imageURL: String, price: Float, categories: String)] = [
+        ("iPhone 11", "http://apple.com/iphone11", 650.00, "cellular"),
+        ("iPad mini", "http://apple.com/ipadmini", 450.00, "tablet"),
+        ("MacBook Pro 14\", M3", "http://apple.com/macbookpro", 1999.00, "laptop"),
+        ("Apple Watch, Series 9", "http://apple.com/watch", 399.00, "wearable"),
+        ("AirPods \"Pro\"", "http://apple.com/airpods", 249.00, "audio"),
+        ("Children's iPad case", "http://example.com/ipadcase", 29.90, "accessory"),
+    ]
     
     /// Create a CSV file and load it with the test data
     ///
@@ -26,44 +38,56 @@ class CSVCreator {
     ///    - totalLines: The lines count in a CSV file
     ///
     class func load(_ filePath: String, totalLines: Int) throws {
-        let fileURL = URL(fileURLWithPath: "./" + filePath)
-        let text = ",iPhone11,http://apple.com/iphone11,650.00,cellular,500\n"
-        let header = "product_id, product_name, product_image_url, product_price, product_categories, product_stock \n"
-        
-        guard let outputStream = OutputStream(url: fileURL, append: false) else {
+        guard FileManager.default.createFile(atPath: filePath, contents: nil),
+              let file = FileHandle(forWritingAtPath: filePath) else {
             throw CSVCreatorError.fileOpenFailed
         }
-        outputStream.open()
-        
+        defer { try? file.close() }
+
         // Write the header
-        if let headerData = header.data(using: .utf8) {
-            headerData.withUnsafeBytes { buffer in
-                _ = outputStream.write(buffer.bindMemory(to: UInt8.self).baseAddress!, maxLength: headerData.count)
-            }
-        }
-        
+        try file.write(contentsOf: Data((Product.columns.joined(separator: ",") + "\n").utf8))
+
         // Write data in batches
-        var remainingLines = totalLines
         var id = 1
-        
-        while remainingLines > 0 {
-            let batchLines = min(BATCH_SIZE, remainingLines)
-            var batchData = ""
-            
-            for _ in 1...batchLines {
-                batchData += "\(id)\(text)"
+        while id <= totalLines {
+            var batch = ""
+            for _ in 0..<min(BATCH_SIZE, totalLines - id + 1) {
+                batch += row(id: id)
                 id += 1
             }
-            
-            if let batchData = batchData.data(using: .utf8) {
-                batchData.withUnsafeBytes { buffer in
-                    _ = outputStream.write(buffer.bindMemory(to: UInt8.self).baseAddress!, maxLength: batchData.count)
-                }
-            }
-            
-            remainingLines -= batchLines
+            try file.write(contentsOf: Data(batch.utf8))
         }
-        
-        outputStream.close()
+    }
+
+    /// Build the CSV line for a product
+    ///
+    /// - parameters:
+    ///    - id: The product id; it picks the sample and the stock count.
+    ///
+    static func row(id: Int) -> String {
+        let sample = samples[(id - 1) % samples.count]
+        let fields = [
+            String(id),
+            sample.name,
+            sample.imageURL,
+            String(format: "%.2f", sample.price),
+            sample.categories,
+            String(id * 7 % 1000),
+        ]
+        return fields.map(quoted).joined(separator: ",") + "\n"
+    }
+
+    /// Quote a field if it holds a comma, a quote, a line break or surrounding whitespace,
+    /// writing each quote inside it twice (RFC 4180)
+    ///
+    static func quoted(_ field: String) -> String {
+        let special: Set<UInt8> = [UInt8(ascii: ","), UInt8(ascii: "\""), UInt8(ascii: "\n"), UInt8(ascii: "\r")]
+        let needsQuotes = field.utf8.contains(where: special.contains)
+            || field.first?.isWhitespace == true
+            || field.last?.isWhitespace == true
+        guard needsQuotes else {
+            return field
+        }
+        return "\"" + field.replacingOccurrences(of: "\"", with: "\"\"") + "\""
     }
 }

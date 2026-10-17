@@ -30,15 +30,28 @@ if argc == 2 {
         print("File not found at the specified path.")
         exit(0)
     }
-    // We derive a table name from the file name
-    let tableName = String(filePath.prefix(upTo: filePath.firstIndex(of: ".") ?? filePath.endIndex))
+    // We derive a table name from the file name, which carries the customer id: 232.csv -> c232
+    let tableName = URL(fileURLWithPath: filePath).deletingPathExtension().lastPathComponent
+    guard !tableName.isEmpty, tableName.allSatisfy({ $0.isASCII && ($0.isLetter || $0.isNumber || $0 == "_") }) else {
+        print("The file name should be a customer id: letters, digits and underscores only.")
+        exit(0)
+    }
     
     // Create keyspace and customer table. Dispatch writes.
     do {
+        // Read the csv file record by record not to load the whole file into memory.
+        // Check the header before connecting, so a wrong file fails fast.
+        let reader = try CSVReader(path: filePath)
+        guard let header = try reader.next() else {
+            print("The file is empty.")
+            exit(0)
+        }
+        try Product.validateHeader(header)
+
         let driver = ScyllaDriver(tableName: tableName)
         driver.setup()
         try driver.initKeyspace()
-        try driver.dispatchQueries(filePath)
+        try driver.dispatchQueries(reader)
         try driver.shutdown()
     } catch {
         print("error: \(error)")

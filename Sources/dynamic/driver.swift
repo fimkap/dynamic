@@ -30,6 +30,10 @@ class ScyllaDriver {
         return self.group.next()
     }
     private let tableName: String
+    /// The table for this customer's products, qualified with the keyspace
+    private var table: String {
+        return "dynamic.c\(self.tableName)"
+    }
     
     init(tableName: String) {
         self.tableName = tableName
@@ -65,7 +69,7 @@ class ScyllaDriver {
                     };
                 """).wait()
         _ = try conn.query("""
-                CREATE TABLE IF NOT EXISTS dynamic.c\(self.tableName) (
+                CREATE TABLE IF NOT EXISTS \(self.table) (
                     product_id int PRIMARY KEY,
                     product_name text,
                     product_image_url text,
@@ -80,9 +84,9 @@ class ScyllaDriver {
     /// Read csv file and dispatch write queries to Scylla DB.
     ///
     /// - parameters:
-    ///    - filePath: The path (name) for csv file.
+    ///    - reader: The csv file, positioned after its header.
     ///
-    func dispatchQueries(_ filePath: String) throws {
+    func dispatchQueries(_ reader: CSVReader) throws {
         // Simplistic implementation of a connection pool.
         // It should enable us to improve load on Scylla for better performance.
         // The driver has no pool of its own, and the one in ScyllaKit didn't compile.
@@ -95,19 +99,25 @@ class ScyllaDriver {
         let queue = OperationQueue()
         queue.maxConcurrentOperationCount = MAX_CONCURRENT_OPERATION_COUNT
 
-        if freopen(filePath, "r", stdin) == nil {
-            perror(filePath)
-        }
-        // Skip csv header
-        _ = readLine()
-        
-        // Parse csv file line by line not to load the whole file into memory
-        while let line = readLine() {
+        while true {
+            let product: Product
+            do {
+                guard let fields = try reader.next() else {
+                    break
+                }
+                product = try Product(fields: fields)
+            } catch let error as CSVReader.CSVError {
+                print("error: \(error)")
+                continue
+            } catch let error as Product.ValidationError {
+                print("error: line \(reader.recordLine): \(error)")
+                continue
+            }
+            let query = product.insertStatement(into: self.table)
             queue.addOperation {
                 // Note that the library is not mature enough to support batch queries.
                 // Randomize the connection selection from the pool and run the query synchronously
                 do {
-                    let query = try CSVParser.parseLine(self.tableName, line)
                     _ = try pool[Int.random(in: 0 ..< MAX_SCYLLA_CONNECTION_COUNT)].query(query, flags: QueryFlags.none, consistency: Consistency.any).wait()
                 } catch {
                     // We need to print the error here because the operation queue doesn't propagate the error to the main thread.
