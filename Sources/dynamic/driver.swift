@@ -61,10 +61,12 @@ class ScyllaDriver {
     ///
     func initKeyspace() throws {
         let conn = try self.makeConnection()
+        // Scylla places data with tablets by default, and tablets don't support SimpleStrategy.
+        // With NetworkTopologyStrategy, replication_factor applies to every datacenter.
         _ = try conn.query("""
                 CREATE KEYSPACE IF NOT EXISTS dynamic
                 WITH replication = {
-                    'class': 'SimpleStrategy',
+                    'class': 'NetworkTopologyStrategy',
                     'replication_factor' : 1
                     };
                 """).wait()
