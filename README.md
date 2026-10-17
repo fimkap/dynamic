@@ -1,6 +1,6 @@
 # dynamic
 Import data from CSV into Scylla DB
-You should be good to go on MacOS with docker, Xcode 11 and Swift 5 installed.
+You need Docker and Swift 6.1 or later, on macOS or Linux.
 
 # Installation
 Run Scylla DB in docker container:
@@ -24,8 +24,11 @@ Clone dynamic repo:
 git clone https://github.com/fimkap/dynamic
 ```
 
-Open the project in Xcode.
-Build the project.
+Build it:
+```
+cd dynamic
+swift build -c release
+```
 
 # Assumptions
 Format of csv file:
@@ -40,14 +43,14 @@ The file should be in the current directory.
 Open terminal app and cd into the project root directory.
 Run the following command to create a csv file with 1M lines in the current dir:
 ```
-./DerivedData/dynamic/Build/Products/Debug/dynamic 232.csv 1000000
+.build/release/dynamic 232.csv 1000000
 ```
 Run the following command to load the data into Scylla container and index it:
 ```
-time ./DerivedData/dynamic/Build/Products/Debug/dynamic 232.csv
+time .build/release/dynamic 232.csv
 ```
 It can take around 6 mins for 1M lines.
-Ignore the message from ScyllaKit "Schema change is not yet implemented".
+Ignore the driver's message "Schema change is not yet implemented".
 Check with cqlsh:
 ```
 desc keyspaces;

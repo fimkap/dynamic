@@ -7,9 +7,11 @@
 //
 
 import Foundation
-import ScyllaKit
+import NIO
+import NIOScyllaDB
 
 let SCYLLA_HOSTNAME = "127.0.0.1"
+let SCYLLA_PORT = 9042
 let SCYLLA_USERNAME = "cassandra"
 let SCYLLA_PASSWORD = "cassandra"
 let MAX_CONCURRENT_OPERATION_COUNT = 64
@@ -42,11 +44,19 @@ class ScyllaDriver {
         self.group = nil
     }
 
+    /// Open a connection to Scylla and log in
+    ///
+    private func makeConnection() throws -> ScyllaConnection {
+        let address = try SocketAddress.makeAddressResolvingHost(SCYLLA_HOSTNAME, port: SCYLLA_PORT)
+        return try ScyllaConnection.connect(to: address, on: self.eventLoop).flatMap { conn in
+            conn.authenticate(username: SCYLLA_USERNAME, password: SCYLLA_PASSWORD).map { conn }
+        }.wait()
+    }
+
     /// Create a keyspace and a customer table
     ///
     func initKeyspace() throws {
-        let db = ScyllaConnectionSource(configuration: .init(hostname: SCYLLA_HOSTNAME, username: SCYLLA_USERNAME, password: SCYLLA_PASSWORD))
-        let conn = try db.makeConnection(logger: Logger(label: "sds"), on: self.eventLoop).wait()
+        let conn = try self.makeConnection()
         _ = try conn.query("""
                 CREATE KEYSPACE IF NOT EXISTS dynamic
                 WITH replication = {
@@ -73,14 +83,12 @@ class ScyllaDriver {
     ///    - filePath: The path (name) for csv file.
     ///
     func dispatchQueries(_ filePath: String) throws {
-        let db = ScyllaConnectionSource(configuration: .init(hostname: SCYLLA_HOSTNAME, username: SCYLLA_USERNAME, password: SCYLLA_PASSWORD))
         // Simplistic implementation of a connection pool.
         // It should enable us to improve load on Scylla for better performance.
-        // ScyllaKit package has some nice patterns for a built-in connection pool,
-        //  but it doesn't compile at the moment.
+        // The driver has no pool of its own, and the one in ScyllaKit didn't compile.
         var pool: [ScyllaConnection] = []
         for _ in 0...MAX_SCYLLA_CONNECTION_COUNT {
-            pool.append(try db.makeConnection(logger: Logger(label: "sds"), on: self.eventLoop).wait())
+            pool.append(try self.makeConnection())
         }
 
         // We'll use OperationQueue to dispatch queries from multiple threads to improve performance.
