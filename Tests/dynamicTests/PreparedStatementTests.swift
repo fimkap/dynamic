@@ -2,11 +2,17 @@ import XCTest
 import NIOScyllaDB
 @testable import dynamic
 
+/// The bytes of PREPARE and EXECUTE, checked against the CQL protocol specification
 final class PreparedStatementTests: XCTestCase {
+    private func bytes(_ buffer: ByteBuffer) -> [UInt8] {
+        var buffer = buffer
+        return buffer.readBytes(length: buffer.readableBytes) ?? []
+    }
+
     private func bytes(_ value: CQLValue) -> [UInt8] {
         var buffer = ByteBufferAllocator().buffer(capacity: 16)
         value.write(to: &buffer)
-        return buffer.readBytes(length: buffer.readableBytes) ?? []
+        return bytes(buffer)
     }
 
     private func result(kind: Int32, _ write: (inout ByteBuffer) -> Void = { _ in }) -> ScyllaMessage {
@@ -29,36 +35,26 @@ final class PreparedStatementTests: XCTestCase {
         XCTAssertEqual(bytes(.text("Café")), [0, 0, 0, 5, 0x43, 0x61, 0x66, 0xC3, 0xA9])
     }
 
-    func testPrepareMessageCarriesTheQuery() throws {
-        let message = try XCTUnwrap(PrepareRequest(query: "SELECT 1").start().first)
-        XCTAssertEqual(message.opcode, .PREPARE)
-        var body = message.body
-        XCTAssertEqual(body.readInteger(as: Int32.self), 8)
-        XCTAssertEqual(body.readString(length: 8), "SELECT 1")
-        XCTAssertEqual(body.readableBytes, 0)
+    func testPrepareBodyIsTheQuery() {
+        XCTAssertEqual(bytes(PreparedStatement.prepareBody("SELECT 1")), [0, 0, 0, 8] + Array("SELECT 1".utf8))
     }
 
     func testPreparedResultGivesTheID() throws {
-        let request = PrepareRequest(query: "SELECT 1")
-        let done = try request.respond(to: result(kind: 4) { body in
+        let id = try PreparedStatement.preparedID(from: result(kind: 4) { body in
             body.writeInteger(UInt16(3))
             body.writeBytes([0xAB, 0xCD, 0xEF])
             body.writeInteger(Int32(0))  // the metadata that follows isn't read
         })
-        XCTAssertNil(done)
-        XCTAssertEqual(request.id, [0xAB, 0xCD, 0xEF])
+        XCTAssertEqual(id, [0xAB, 0xCD, 0xEF])
     }
 
     func testOtherResultToPrepareIsAnError() {
-        XCTAssertThrowsError(try PrepareRequest(query: "SELECT 1").respond(to: result(kind: 1)))
+        XCTAssertThrowsError(try PreparedStatement.preparedID(from: result(kind: 1)))
     }
 
-    func testExecuteMessageLayout() throws {
-        let request = ExecuteRequest(id: [0xAB, 0xCD], values: [.int(7), .text("a")], consistency: .one)
-        let message = try XCTUnwrap(request.start().first)
-        XCTAssertEqual(message.opcode, .EXECUTE)
-        var body = message.body
-        XCTAssertEqual(body.readBytes(length: body.readableBytes), [
+    func testExecuteBodyLayout() {
+        let statement = PreparedStatement(id: [0xAB, 0xCD])
+        XCTAssertEqual(bytes(statement.executeBody([.int(7), .text("a")], consistency: .one)), [
             0x00, 0x02, 0xAB, 0xCD,                          // the id as [short bytes]
             0x00, 0x01,                                      // consistency ONE
             0x01,                                            // flags: values follow

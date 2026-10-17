@@ -29,9 +29,9 @@ enum RequestError: Error, CustomStringConvertible {
 
 /// Fail a request that gets no answer in time.
 ///
-/// The driver never completes a request that Scylla answered with an error: it logs the error
-/// and keeps waiting for a response that won't come. A timeout turns that silent wait into
-/// a failure the caller can retry or report.
+/// A request can go unanswered: Scylla stops responding, as when it was paused mid-load,
+/// or a connection stalls. A timeout turns that silent wait into a failure the caller
+/// can retry or report.
 ///
 /// - parameters:
 ///    - future: The request's result.
@@ -53,6 +53,19 @@ func withTimeout<T>(_ future: EventLoopFuture<T>, _ timeout: TimeAmount) -> Even
         }
     }
     return promise.futureResult
+}
+
+/// Whether a failed request is worth retrying: Scylla's availability, overload and timeout errors,
+/// a closed connection, and no answer in time. A request Scylla rejected as invalid would fail again.
+///
+func isRetryable(_ error: Error) -> Bool {
+    if let error = error as? CQLError {
+        return error.isRetryable
+    }
+    if let error = error as? RequestError, case .timedOut = error {
+        return true
+    }
+    return false
 }
 
 /// The delay before retrying a request: exponential, with full jitter.

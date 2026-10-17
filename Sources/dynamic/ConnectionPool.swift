@@ -7,14 +7,13 @@
 //
 
 import Foundation
-import NIOScyllaDB
 
 /// A `ConnectionPool` hands out connections round robin, skipping closed ones.
 /// Each connection carries the insert prepared on it.
 ///
 final class ConnectionPool {
     struct Member {
-        let connection: ScyllaConnection
+        let connection: CQLConnection
         let insert: PreparedStatement
     }
 
@@ -42,9 +41,7 @@ final class ConnectionPool {
         return nil
     }
 
-    /// Call `close()` on every connection. The driver's `close()` doesn't close an open channel,
-    /// because its check is inverted, so the sockets close when the event loops shut down.
-    /// Calling it still matters: the driver asserts that a connection was closed before it's released.
+    /// Close every connection
     ///
     func close() {
         for member in members {

@@ -72,11 +72,10 @@ class ScyllaDriver {
 
     /// Open a connection to Scylla and log in
     ///
-    private func makeConnection() throws -> ScyllaConnection {
-        let address = try SocketAddress.makeAddressResolvingHost(SCYLLA_HOSTNAME, port: SCYLLA_PORT)
-        return try ScyllaConnection.connect(to: address, on: self.eventLoop).flatMap { conn in
-            conn.authenticate(username: SCYLLA_USERNAME, password: SCYLLA_PASSWORD).map { conn }
-        }.wait()
+    private func makeConnection() throws -> CQLConnection {
+        return try CQLConnection.connect(host: SCYLLA_HOSTNAME, port: SCYLLA_PORT,
+                                         username: SCYLLA_USERNAME, password: SCYLLA_PASSWORD,
+                                         on: self.eventLoop).wait()
     }
 
     /// Create a keyspace and a customer table
@@ -173,7 +172,8 @@ class ScyllaDriver {
         return ConnectionPool(members)
     }
 
-    /// Write a product, retrying after a growing delay if an attempt fails or times out.
+    /// Write a product, retrying after a growing delay if an attempt times out or fails with an error
+    /// worth retrying.
     /// Retrying is safe because the insert is idempotent: writing a row again with the same
     /// primary key stores the same values, even if an earlier attempt did reach Scylla.
     ///
@@ -196,7 +196,7 @@ class ScyllaDriver {
         let eventLoop = member.connection.eventLoop
         let request = member.insert.execute(product.values, consistency: .one, on: member.connection)
         return withTimeout(request, WRITE_TIMEOUT).flatMapError { error in
-            guard attempt < MAX_ATTEMPTS else {
+            guard attempt < MAX_ATTEMPTS, isRetryable(error) else {
                 return eventLoop.makeFailedFuture(error)
             }
             self.tally.retried()
