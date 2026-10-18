@@ -85,11 +85,11 @@ if arguments.count == 1 {
         }
         try Product.validateHeader(header)
 
-        let driver = ScyllaDriver(tableName: tableName, connections: connectionCount, maxWritesInFlight: maxWritesInFlight)
-        driver.setup()
-        try driver.initKeyspace()
-        let complete = try driver.dispatchQueries(reader)
-        try driver.shutdown()
+        let loader = Loader(tableName: tableName, connections: connectionCount, maxWritesInFlight: maxWritesInFlight)
+        loader.setup()
+        try loader.initKeyspace()
+        let complete = try loader.dispatchQueries(reader)
+        try loader.shutdown()
         exit(complete ? EXIT_SUCCESS : EXIT_FAILURE)
     } catch {
         fail("\(error)")

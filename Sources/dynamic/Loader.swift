@@ -1,5 +1,5 @@
 //
-//  driver.swift
+//  Loader.swift
 //  dynamic
 //
 //  Created by Efim Polevoi on 07/02/2020.
@@ -26,14 +26,14 @@ func printError(_ message: String) {
     FileHandle.standardError.write(Data("error: \(message)\n".utf8))
 }
 
-/// A `ScyllaDriver` is the central type in `dynamic`.
+/// A `Loader` is the central type in `dynamic`.
 /// Its central function is to dispatch write queries to Scylla DB based on csv file
 ///
-/// The most basic usage of a `ScyllaDriver` is
+/// The most basic usage of a `Loader` is
 ///
-///     driver.dispatchQueries(reader)
+///     loader.dispatchQueries(reader)
 ///
-class ScyllaDriver {
+class Loader {
     private var group: EventLoopGroup!
     private var eventLoop: EventLoop {
         return self.group.next()

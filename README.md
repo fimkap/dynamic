@@ -159,7 +159,7 @@ Sources/dynamic/
   CSVReader.swift          streaming RFC 4180 parser
   Product.swift            row validation
   CSVCreator.swift         test-file generator
-  driver.swift             schema, the write loop, retries
+  Loader.swift             schema, the write loop, retries
   CQLConnection.swift      handshake, request ids, errors
   PreparedStatement.swift  PREPARE and EXECUTE
   Retries.swift            timeouts and retry delays
