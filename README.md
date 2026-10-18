@@ -6,22 +6,57 @@ It began in February 2020 as a take-home assignment for a job interview, where t
 
 ## Quick start
 
-You need Docker and Swift 6.1 or later, on macOS or Linux.
+You need Git, Docker, and Swift 6.1 or later, which comes with a recent Xcode. It should also build on Linux with a toolchain from [swift.org](https://www.swift.org/install/), but that hasn't been verified yet.
+
+**1. Get the code and build it.**
+
+```
+git clone https://github.com/fimkap/dynamic.git
+cd dynamic
+swift build -c release
+```
+
+The first build downloads the dependencies, SwiftNIO and the driver, and takes a minute or two. The program is then `.build/release/dynamic`. To work on it in Xcode, open `Package.swift`.
+
+**2. Start ScyllaDB** in Docker, with two CPU cores and 4 GB of memory, and wait until it accepts queries:
 
 ```
 docker run --name dy-scylla -p 9042:9042 -d scylladb/scylla:latest --smp 2 --memory 4G --overprovisioned 1
-swift build -c release
-.build/release/dynamic 232.csv 1000000     # generate a million products
-.build/release/dynamic 232.csv             # load them into dynamic.c232
+until docker exec dy-scylla cqlsh -e "SELECT release_version FROM system.local" > /dev/null 2>&1; do sleep 2; done
 ```
 
-The file name is a customer id, and the table is named after it. A load ends with a summary:
+The second command returns once ScyllaDB is ready, usually within a minute.
+
+**3. Generate a file of a million products, and load it.**
+
+```
+.build/release/dynamic 232.csv 1000000
+.build/release/dynamic 232.csv
+```
+
+The file name is a customer id, and the rows go to a table named after it, `dynamic.c232`. A load ends with a summary:
 
 ```
 Wrote 1000000 rows in 19.5 s (51336 rows/s). Retries: 0. Failed rows: 0. Skipped as invalid: 0. Peak memory: 7 MB.
 ```
 
-`swift test` runs the unit tests, which need no database. `scripts/benchmark.sh` measures a load in about a minute. Both are described under *Tests*.
+**4. Check that every row was stored.**
+
+```
+docker exec dy-scylla cqlsh --request-timeout=300 -e "SELECT COUNT(*) FROM dynamic.c232"
+```
+
+It should report 1000000. Counting reads the whole table, so it takes a few seconds; the longer timeout stops cqlsh from giving up at its default of 10 seconds. To look at some of the rows:
+
+```
+docker exec dy-scylla cqlsh -e "SELECT * FROM dynamic.c232 LIMIT 5"
+```
+
+**5. Run the tests**, which need no database, with `swift test`. `scripts/benchmark.sh` measures a load in about a minute. Both are described under *Tests*.
+
+When you're done, `docker rm -f dy-scylla` removes ScyllaDB and its data.
+
+### Options
 
 `--in-flight <writes>` caps the writes outstanding at a time (default 512), and `--connections <count>` sets the number of connections (default 8). The exit code is 0 when every row was written and 1 otherwise. Writing a row again stores the same values, so after a partial failure it's safe to run the file again.
 
